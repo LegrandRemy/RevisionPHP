@@ -1,28 +1,65 @@
 <?php
+$postData = $_POST;
+
 //Validation du formaulaire
-if (isset($_POST['email']) && isset($_POST['password'])) {
+if (isset($postData['email']) && isset($postData['password'])) {
     foreach ($users as $user) {
         if (
-            $user['email'] === $_POST['email'] &&
-            $user['password'] === $_POST['password']
+            $user['email'] === $postData['email'] &&
+            $user['password'] === $postData['password']
         ) {
-            $_SESSION['LOGGED_USER'] = $user['email'];
+            $loggedUser = [
+                'email' => $user['email'],
+                'full_name' => $user['full_name'],
+            ];
+
+
+            /**
+             * Cookie qui expire dans un an
+             */
+            // setcookie(
+            //     'LOGGED_USER',
+            //     $loggedUser['email'],
+            //     $loggedUser['full_name'],
+            //     [
+            //         'expires' => time() + 365 * 24 * 3600,
+            //         'secure' => true,
+            //         'httponly' => true,
+            //     ]
+            // );
+
+            $_SESSION['LOGGED_USER'] = $loggedUser['email'];
+            $_SESSION['LOGGED_USERNAME'] = $loggedUser['full_name'];
+        } else {
+            $errorMessage = sprintf(
+                'Les informations envoyées ne permettent pas de vous identifier : (%s/%s)',
+                $postData['email'],
+                $postData['password']
+            );
         }
     }
+}
+// Si le cookie ou la session sont présentes
+if (isset($_COOKIE['LOGGED_USER']) || isset($_SESSION['LOGGED_USER'])) {
+    $loggedUser = [
+        'email' => $_COOKIE['LOGGED_USER'] ?? $_SESSION['LOGGED_USER'],
+        'full_name' => $_SESSION['LOGGED_USERNAME']
+    ];
 }
 ?>
 <!-- 
     Si utilisateur est non identifié, on affiche le formulaire 
 -->
-<?php if (!isset($_SESSION['LOGGED_USER'])) : ?>
+<?php if (!isset($loggedUser)) : ?>
 
 <form action="home.php" method="post">
     <!-- si message d'erreur on l'affiche -->
     <?php if (isset($errorMessage)) : ?>
     <div class="alert alert-danger" role="alert">
-        <?php echo $errorMessage ?>
+        <?php echo ($errorMessage); ?>
     </div>
     <?php endif; ?>
+
     <div class="mb3">
         <label for="email" class="form-label">Email</label>
         <input type="email" class="form-control" id="email" name="email" aria-describedby="email-help"
@@ -40,7 +77,5 @@ if (isset($_POST['email']) && isset($_POST['password'])) {
     Si utilisateur bien connectée on affiche un message de succès
 -->
 <?php else : ?>
-<div class="alert alert-success" role="alert">
-    Bonjour <?php echo $_SESSION['LOGGED_USER']; ?> et bienvenue sur le site !
-</div>
+
 <?php endif; ?>

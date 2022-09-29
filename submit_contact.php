@@ -1,4 +1,4 @@
-<?php
+<?php session_start();
 
 // submit_contact.php
 if (!isset($_POST['email']) && !isset($_POST['message'])) {
